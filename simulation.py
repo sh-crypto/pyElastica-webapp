@@ -8,10 +8,10 @@ class RodSimulator(BaseSystemCollection, Constraints, Forcing, Damping, CallBack
 def run_simulation(params):
     simulator = RodSimulator()
     
-    # Create a rod
     n_elements = 50
     rod_length = params.get("length", 1.0)
     rod_radius = params.get("radius", 0.05)
+    print(f"Rod Length: {rod_length}, Rod Radius: {rod_radius}")
     rod = CosseratRod.straight_rod(
         n_elements,
         start=np.array([0.0, 0.0, 0.0]),
@@ -25,14 +25,17 @@ def run_simulation(params):
     )
     simulator.append(rod)
 
-    # Apply constraints and forces
     simulator.constrain(rod).using(FixedConstraint, constrained_position_idx=(0,), constrained_director_idx=(0,))
-    simulator.finalize()
 
-    # Run simulation
+    time_stepper = PositionVerlet()  
+    simulator.time_stepper = time_stepper  
+
+    simulator.finalize()  
+
     timestep = 1e-4
     total_time = 1.0
-    for _ in range(int(total_time / timestep)):
-        simulator.time_stepper.do_step(simulator, dt=timestep)
+    total_steps = int(total_time / timestep)
 
-    return {"message": "Simulation complete", "rod_position": rod.position.tolist()}
+    integrate(time_stepper, simulator, final_time=total_time, total_steps=total_steps)
+
+    return {"message": "Simulation complete", "rod_position": rod.position_collection.tolist()}
