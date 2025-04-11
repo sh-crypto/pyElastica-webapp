@@ -11,7 +11,9 @@ def run_simulation(params):
     n_elements = 50
     rod_length = params.get("length", 1.0)
     rod_radius = params.get("radius", 0.05)
-    print(f"Rod Length: {rod_length}, Rod Radius: {rod_radius}")
+    density = params.get("density", 2000)
+    youngs_modulus = params.get("youngs_modulus", 1e6)
+
     rod = CosseratRod.straight_rod(
         n_elements,
         start=np.array([0.0, 0.0, 0.0]),
@@ -19,18 +21,16 @@ def run_simulation(params):
         normal=np.array([0.0, 1.0, 0.0]),
         base_length=rod_length,
         base_radius=rod_radius,
-        density=1000,
-        youngs_modulus=1e6,
-        shear_modulus=1e5
+        density=density,
+        youngs_modulus=youngs_modulus,
     )
-    simulator.append(rod)
 
+    simulator.append(rod)
     simulator.constrain(rod).using(FixedConstraint, constrained_position_idx=(0,), constrained_director_idx=(0,))
 
     time_stepper = PositionVerlet()  
     simulator.time_stepper = time_stepper  
-
-    simulator.finalize()  
+    simulator.finalize()
 
     timestep = 1e-4
     total_time = 1.0
